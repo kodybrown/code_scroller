@@ -1,5 +1,5 @@
 [package]
-name = "codescroller"
+name = "code_scroller"
 version = "0.1.0"
 edition = "2021"
 
