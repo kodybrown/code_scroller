@@ -124,74 +124,6 @@ cross build --release --target x86_64-pc-windows-gnu
 
 You can then package the produced binaries (zip/tar.gz) as shown above.
 
-### GitHub Actions (automated builds and releases)
-
-If this repo is on GitHub, you can automate multi-OS release binaries.
-
-Create `.github/workflows/release.yml` with the following minimal workflow:
-
-```yaml
-name: release
-on:
-  push:
-    tags:
-      - 'v*'
-
-jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            bin: code_scroller.exe
-            archive: zip
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            bin: code_scroller
-            archive: tar.gz
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
-      - name: Build
-        run: cargo build --release --target ${{ matrix.target }}
-      - name: Package
-        shell: bash
-        run: |
-          mkdir dist
-          BIN=target/${{ matrix.target }}/release/${{ matrix.bin }}
-          if [ "${{ matrix.archive }}" = "zip" ]; then
-            7z a dist/code_scroller-${{ matrix.target }}.zip "$BIN"
-          else
-            tar czf dist/code_scroller-${{ matrix.target }}.tar.gz -C "$(dirname "$BIN")" "${{ matrix.bin }}"
-          fi
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: code_scroller-${{ matrix.target }}
-          path: dist/*
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          path: dist
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: dist/**/*
-```
-
-Usage:
-
-1. Commit and push the workflow.
-2. Create a tag like `v0.1.0` and push it (`git tag v0.1.0 && git push origin v0.1.0`).
-3. GitHub Actions will build and attach archives to a GitHub Release automatically.
-
 ## Notes
 
 - Some very large files are skipped based on `--max-kb`.
@@ -200,4 +132,4 @@ Usage:
 
 ## License
 
-MIT or your preferred license.
+MIT license.
