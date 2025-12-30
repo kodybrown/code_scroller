@@ -35,12 +35,18 @@ jobs:
       - name: Package
         shell: bash
         run: |
-          mkdir dist
+          mkdir -p dist
           BIN=target/${{ matrix.target }}/release/${{ matrix.bin }}
           if [ "${{ matrix.archive }}" = "zip" ]; then
-            7z a dist/code_scroller-${{ matrix.target }}.zip "$BIN"
+            # Windows: zip and also copy raw .exe
+            7z a "dist/code_scroller-${{ matrix.target }}.zip" "$BIN"
+            # cp "$BIN" "dist/code_scroller-${{ matrix.target }}.exe"
+            cp "$BIN" "dist/code_scroller.exe"
           else
-            tar czf dist/code_scroller-${{ matrix.target }}.tar.gz -C "$(dirname "$BIN")" "${{ matrix.bin }}"
+            # Linux: tar.gz and also copy raw binary
+            tar czf "dist/code_scroller-${{ matrix.target }}.tar.gz" -C "$(dirname "$BIN")" "${{ matrix.bin }}"
+            # cp "$BIN" "dist/code_scroller-${{ matrix.target }}"
+            cp "$BIN" "dist/code_scroller"
           fi
       - name: Upload artifact
         uses: actions/upload-artifact@v4
