@@ -1,4 +1,4 @@
-# codescroller
+# code_scroller
 
 Auto-scroll code files in your terminal with syntax highlighting. Built with ratatui (for TUI) and syntect (for highlighting).
 
@@ -25,12 +25,12 @@ Release build:
 cargo build --release
 ```
 
-The binary will be in `target/release/` (`codescroller.exe` on Windows).
+The binary will be in `target/release/` (`code_scroller.exe` on Windows).
 
 ## Usage
 
 ```bash
-codescroller <PATH> [--speed-ms <u64>] [--step <usize>] [--loop=<bool>] [--exts <csv>] [--max-kb <u64>] [--random-start=<bool>]
+code_scroller <PATH> [--speed-ms <u64>] [--step <usize>] [--loop=<bool>] [--ext <ext>]... [--max-kb <u64>] [--random-start=<bool>]
 ```
 
 Arguments
@@ -39,7 +39,7 @@ Arguments
 - `--speed-ms` — delay per tick in milliseconds (default: 60)
 - `--step` — number of lines advanced per tick (default: 1)
 - `--loop` — whether to loop across files (default: true). To disable, pass `--loop=false`.
-- `--exts` — comma-separated list of file extensions to include (e.g. `rs,cs,go,cpp,h,py,js,ts`)
+- `--ext` — repeatable flag for allowed extensions (with or without dots). Example: `--ext .cs --ext json --ext html`. If omitted, a broad default of common text/code types is used.
 - `--max-kb` — maximum file size to load in KB (default: 512)
 - `--random-start` — start at a random file (default: false). Enable via `--random-start=true`.
 
@@ -57,19 +57,19 @@ Examples
 
 ```bash
 # Auto-scroll the current directory with defaults
-codescroller .
+code_scroller .
 
 # Faster scrolling, two lines per tick
-codescroller ./src --speed-ms 30 --step 2
+code_scroller ./src --speed-ms 30 --step 2
 
-# Only Rust and TypeScript files, bigger files allowed
-codescroller . --exts rs,ts --max-kb 2048
+# Only C#, JSON, and HTML files; allow bigger files
+code_scroller . --ext .cs --ext .json --ext .html --max-kb 2048
 
 # Do not loop across files
-codescroller . --loop=false
+code_scroller . --loop=false
 
 # Start at a random file
-codescroller . --random-start=true
+code_scroller . --random-start=true
 ```
 
 ## Publishing release binaries
@@ -84,18 +84,18 @@ Build on the target OS for the simplest, fully-static-free binaries:
 
 ```powershell
 cargo build --release
-# output: target\release\codescroller.exe
+# output: target\\release\\code_scroller.exe
 # optional: zip for distribution
-Compress-Archive -Path target\release\codescroller.exe -DestinationPath codescroller-x86_64-pc-windows-msvc.zip
+Compress-Archive -Path target\\release\\code_scroller.exe -DestinationPath code_scroller-x86_64-pc-windows-msvc.zip
 ```
 
 - Linux (GNU):
 
 ```bash
 cargo build --release
-# output: target/release/codescroller
+# output: target/release/code_scroller
 # optional: tar.gz for distribution
-tar czf codescroller-x86_64-unknown-linux-gnu.tar.gz -C target/release codescroller
+tar czf code_scroller-x86_64-unknown-linux-gnu.tar.gz -C target/release code_scroller
 ```
 
 ### Cross-compiling with `cross` (recommended for reproducible builds)
@@ -112,14 +112,14 @@ Build Linux binary (from any OS with Docker available):
 
 ```bash
 cross build --release --target x86_64-unknown-linux-gnu
-# artifact: target/x86_64-unknown-linux-gnu/release/codescroller
+# artifact: target/x86_64-unknown-linux-gnu/release/code_scroller
 ```
 
 Build Windows GNU binary:
 
 ```bash
 cross build --release --target x86_64-pc-windows-gnu
-# artifact: target/x86_64-pc-windows-gnu/release/codescroller.exe
+# artifact: target/x86_64-pc-windows-gnu/release/code_scroller.exe
 ```
 
 You can then package the produced binaries (zip/tar.gz) as shown above.
@@ -145,11 +145,11 @@ jobs:
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            bin: codescroller.exe
+            bin: code_scroller.exe
             archive: zip
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            bin: codescroller
+            bin: code_scroller
             archive: tar.gz
     steps:
       - uses: actions/checkout@v4
@@ -164,14 +164,14 @@ jobs:
           mkdir dist
           BIN=target/${{ matrix.target }}/release/${{ matrix.bin }}
           if [ "${{ matrix.archive }}" = "zip" ]; then
-            7z a dist/codescroller-${{ matrix.target }}.zip "$BIN"
+            7z a dist/code_scroller-${{ matrix.target }}.zip "$BIN"
           else
-            tar czf dist/codescroller-${{ matrix.target }}.tar.gz -C "$(dirname "$BIN")" "${{ matrix.bin }}"
+            tar czf dist/code_scroller-${{ matrix.target }}.tar.gz -C "$(dirname "$BIN")" "${{ matrix.bin }}"
           fi
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: codescroller-${{ matrix.target }}
+          name: code_scroller-${{ matrix.target }}
           path: dist/*
 
   release:

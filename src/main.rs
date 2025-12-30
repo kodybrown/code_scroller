@@ -29,7 +29,10 @@ use syntect::{
 use walkdir::WalkDir;
 
 #[derive(Parser, Debug)]
-#[command(name = "codescroller", about = "Auto-scroll code files with syntax highlighting.")]
+#[command(
+    name = "code_scroller",
+    about = "Auto-scroll code files with syntax highlighting."
+)]
 struct Args {
     /// A file or directory to scroll through
     #[arg(value_name = "PATH")]
@@ -47,9 +50,10 @@ struct Args {
     #[arg(long, default_value_t = true)]
     r#loop: bool,
 
-    /// Optional comma-separated extensions (no dots). Example: rs,cs,go,cpp,h,py,js,ts
-    #[arg(long)]
-    exts: Option<String>,
+    /// Allowed file extensions (repeatable). Example: --ext .cs --ext json --ext html
+    /// When omitted, a broad default set of text/code extensions is used.
+    #[arg(long = "ext")]
+    exts: Vec<String>,
 
     /// Maximum file size to load (in KB). Larger files are skipped.
     #[arg(long, default_value_t = 512)]
@@ -111,7 +115,7 @@ fn restore_terminal() -> Result<()> {
 }
 
 fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>, args: Args) -> Result<()> {
-    let exts = parse_exts(args.exts.as_deref());
+    let exts = parse_exts(&args.exts);
     let files = collect_files(&args.path, &exts, args.max_kb)
         .with_context(|| format!("collect files from {}", args.path.display()))?;
 
@@ -208,7 +212,7 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
     );
 
     let header = Paragraph::new(Line::from(vec![
-        Span::styled("codescroller", Style::default().fg(Color::Green)),
+        Span::styled("code_scroller", Style::default().fg(Color::Green)),
         Span::raw(" — "),
         Span::raw(title),
     ]))
@@ -218,7 +222,9 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
 
     let view_height = chunks[1].height as usize;
 
-    let start = app.scroll.min(app.highlighted_lines.len().saturating_sub(1));
+    let start = app
+        .scroll
+        .min(app.highlighted_lines.len().saturating_sub(1));
     let end = (start + view_height).min(app.highlighted_lines.len());
 
     let mut text = Text::default();
@@ -301,7 +307,7 @@ fn is_allowed(p: &Path, exts: &HashSet<String>, max_kb: u64) -> Result<bool> {
     Ok(exts.contains(&ext))
 }
 
-fn parse_exts(s: Option<&str>) -> HashSet<String> {
+fn parse_exts(list: &[String]) -> HashSet<String> {
     let default = [
         "rs", "toml", "c", "h", "cpp", "hpp", "cc", "cs", "go", "py", "js", "ts", "jsx", "tsx",
         "java", "kt", "swift", "php", "rb", "lua", "sh", "ps1", "sql", "html", "css", "json",
@@ -309,14 +315,26 @@ fn parse_exts(s: Option<&str>) -> HashSet<String> {
     ];
 
     let mut set = HashSet::new();
-    let list: Vec<&str> = if let Some(s) = s {
-        s.split(',').map(|x| x.trim()).filter(|x| !x.is_empty()).collect()
-    } else {
-        default.to_vec()
-    };
+
+    if list.is_empty() {
+        for e in default {
+            set.insert(e.to_string());
+        }
+        return set;
+    }
 
     for e in list {
-        set.insert(e.trim_start_matches('.').to_lowercase());
+        if e.contains(',') {
+            // allow accidental comma-separated values in a single flag occurrence
+            for part in e.split(',') {
+                let part = part.trim();
+                if !part.is_empty() {
+                    set.insert(part.trim_start_matches('.').to_lowercase());
+                }
+            }
+        } else {
+            set.insert(e.trim_start_matches('.').to_lowercase());
+        }
     }
     set
 }
