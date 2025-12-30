@@ -46,7 +46,7 @@ jobs:
             # Linux: tar.gz and also copy raw binary
             tar czf "dist/code_scroller-${{ matrix.target }}.tar.gz" -C "$(dirname "$BIN")" "${{ matrix.bin }}"
             # cp "$BIN" "dist/code_scroller-${{ matrix.target }}"
-            cp "$BIN" "dist/code_scroller"
+            cp "$BIN" "dist/code_scroller-linux"
           fi
       - name: Upload artifact
         uses: actions/upload-artifact@v4
