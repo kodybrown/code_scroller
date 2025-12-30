@@ -4,9 +4,16 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    env:
+      CARGO_TERM_COLOR: always
+      # Override repo's .cargo/config target-dir so artifacts land under the workspace
+      CARGO_TARGET_DIR: target
     strategy:
       matrix:
         include:
@@ -44,6 +51,8 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v4
         with:
